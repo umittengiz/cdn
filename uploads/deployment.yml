@@ -1,0 +1,26 @@
+name: Deploy REPO_NAME to Dev Env
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ dev ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh command using ssh key
+        id: deploy-to-server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEV_SSH_HOST }}
+          username: ${{ secrets.DEV_SSH_USER }}
+          key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.DEV_SSH_PORT }}
+          script_stop: true
+          script: |
+            cd /home/ubuntu/FOLDER_NAME
+            git checkout . && git checkout dev && git pull origin dev --rebase
+            yarn install
+            rm -f public/robots.txt && mv public/robots.dev.txt public/robots.txt
+            pm2 reload PROCESS_NAME
